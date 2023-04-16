@@ -79,19 +79,19 @@ const Home = () => {
     }
   };
 
-  const handleAddEnter = (event) => {;
+  const handleAddEnter = (event) => {
     if (event.key === "Enter") {
       upTask();
-      setTaskName("");
+      setTaskName({ done: false, label: "" });
     }
   };
   const deleteTask = async (id) => {
     try {
       let newListTask = Tasks.filter((item, index) => index != id);
       console.log(newTask.length);
-      if (newListTask.length == 0) {
-        newListTask = [{ done: false, label: "test" }];
-      }
+      //  if (newListTask.length == 0) {
+      //    newListTask = [{ done: false, label: "test" }];
+      // }
       let response = await fetch(`${urlApi}`, {
         method: "PUT",
         headers: {
@@ -108,9 +108,25 @@ const Home = () => {
       console.log(error);
     }
   };
+
+  const deleteUser = async () => {
+    try {
+      const response = await fetch(`${urlApi}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        createUser();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const handleAddClick = () => {
     upTask();
-    setTaskName("");
+    setTaskName({ done: false, label: "" });
   };
   return (
     <div className="d-flex justify-content-center">
@@ -119,6 +135,7 @@ const Home = () => {
         <div className="card m-5 ">
           <div className="card-header bg-success">
             <input
+              name="taskName"
               type="text"
               placeholder="New task"
               onChange={(event) => handleTaskChange(event)}
@@ -150,6 +167,7 @@ const Home = () => {
           <div className="card-footer bg-success">
             {Tasks.length} tasks left.
           </div>
+          <button onClick={() => deleteUser()}>cuchao</button>
         </div>
       </div>
     </div>
