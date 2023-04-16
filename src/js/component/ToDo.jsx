@@ -1,47 +1,115 @@
 import React, { useEffect, useState } from "react";
 
 const Home = () => {
-  const urlApi = "https://assets.breatheco.de/apis/fake/todos/";
+  const urlApi = "https://assets.breatheco.de/apis/fake/todos/user/DiegoArraez";
 
+  const [error, setError] = useState(false);
   const [Tasks, setTasks] = useState([]);
-  const [TaskName, setTaskName] = useState("");
+  const [TaskName, setTaskName] = useState({ done: false, label: "" });
   const handleTaskChange = (event) => {
-    setTaskName(event.target.value);
+    setTaskName({ ...TaskName, label: event.target.value });
+  };
+
+  const createUser = async () => {
+    try {
+      let response = await fetch(`${urlApi}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify([]),
+      });
+      if (response.ok) {
+        getTasks();
+      } else {
+        alert("El usuario no se ha creado");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const newTask = (e) => {
+    setTasks({
+      ...Tasks,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const getTasks = async () => {
     try {
-      const response = await fetch("https://express-blog-xa7v.onrender.com/", {
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await response.json();
-    } catch (error) {}
+      setError(false);
+      let response = await fetch(`${urlApi}`);
+      let results = await response.json();
+      if (response.ok) {
+        setTasks(results);
+      } else {
+        createUser();
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
+
   useEffect(() => {
     getTasks();
   }, []);
 
-  const handleAddEnter = (event) => {
-    console.log(event.key);
+  const upTask = async () => {
+    try {
+      if (TaskName.label.trim() != "") {
+        let response = await fetch(`${urlApi}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([...Tasks, TaskName]),
+        });
+        if (response.ok) {
+          getTasks();
+          setError(false);
+        } else {
+          console.log(response.status);
+        }
+      } else {
+        setError(true);
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAddEnter = (event) => {;
     if (event.key === "Enter") {
-      const newTask = {
-        accion: TaskName,
-      };
-      const newTasks = [...Tasks, newTask];
-      setTasks(newTasks);
+      upTask();
       setTaskName("");
     }
-
-    const handleRemove = (id) => {
-      setTasks(Tasks.filter((item, index) => index != id));
-    };
+  };
+  const deleteTask = async (id) => {
+    try {
+      let newListTask = Tasks.filter((item, index) => index != id);
+      console.log(newTask.length);
+      if (newListTask.length == 0) {
+        newListTask = [{ done: false, label: "test" }];
+      }
+      let response = await fetch(`${urlApi}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newListTask),
+      });
+      if (response.ok) {
+        getTasks();
+      } else {
+        console.log(response.status);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
   const handleAddClick = () => {
-    const newTask = {
-      accion: TaskName,
-    };
-    const newTasks = [...Tasks, newTask];
-    setTasks(newTasks);
+    upTask();
     setTaskName("");
   };
   return (
@@ -55,7 +123,7 @@ const Home = () => {
               placeholder="New task"
               onChange={(event) => handleTaskChange(event)}
               onKeyDown={(event) => handleAddEnter(event)}
-              value={TaskName}
+              value={TaskName.label}
             />
             <button onClick={() => handleAddClick()}>Add me</button>
           </div>
@@ -66,20 +134,22 @@ const Home = () => {
                 return (
                   <li
                     className="list-group-item d-flex justify-content-between"
-                    key={`${task.accion}-${index}`}
+                    key={`${task.label}-${index}`}
                   >
-                    <p>{task.accion}</p>
+                    <p>{task.label}</p>
                     <button
                       className="btn-close"
                       aria-label="Close"
-                      onClick={() => handleRemove(index)}
+                      onClick={() => deleteTask(index)}
                     ></button>
                   </li>
                 );
               })}
             </ul>
           </div>
-          <div className="card-footer bg-success">{Tasks.length} tasks left.</div>
+          <div className="card-footer bg-success">
+            {Tasks.length} tasks left.
+          </div>
         </div>
       </div>
     </div>
